@@ -1,0 +1,47 @@
+:root {
+  /* Light Theme */
+  --light-bg-primary: #F8FAFC;
+  --light-bg-secondary: #FFFFFF;
+  --light-text-primary: #0F172A;
+  --light-text-secondary: #475569;
+  --light-accent: #3B82F6;
+  --light-border: #E2E8F0;
+  --light-glass: rgba(255, 255, 255, 0.8);
+  
+  /* Dark Theme */
+  --dark-bg-primary: #0F172A;
+  --dark-bg-secondary: #1E293B;
+  --dark-text-primary: #F1F5F9;
+  --dark-text-secondary: #CBD5E1;
+  --dark-accent: #6366F1;
+  --dark-border: #334155;
+  --dark-glass: rgba(30, 41, 59, 0.8);
+  
+  /* Common */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --glass-blur: blur(10px);
+  --border-radius: 12px;
+  --transition: all 0.3s ease;
+}
+
+[data-theme="light"] {
+  --bg-primary: var(--light-bg-primary);
+  --bg-secondary: var(--light-bg-secondary);
+  --text-primary: var(--light-text-primary);
+  --text-secondary: var(--light-text-secondary);
+  --accent: var(--light-accent);
+  --border: var(--light-border);
+  --glass: var(--light-glass);
+}
+
+[data-theme="dark"] {
+  --bg-primary: var(--dark-bg-primary);
+  --bg-secondary: var(--dark-bg-secondary);
+  --text-primary: var(--dark-text-primary);
+  --text-secondary: var(--dark-text-secondary);
+  --accent: var(--dark-accent);
+  --border: var(--dark-border);
+  --glass: var(--dark-glass);
+}
