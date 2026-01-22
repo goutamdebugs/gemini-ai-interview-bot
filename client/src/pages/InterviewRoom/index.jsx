@@ -127,7 +127,7 @@ const InterviewRoom = () => {
   const handleStartInterview = () => {
     const welcomeMessage = {
       id: Date.now(),
-      text: "Hello! I'm ready to take your MERN Stack interview. Shall we begin?",
+      text: "Hello! I am an AI agent developed by Goutam. I am a powerful interviewer here to assess your technical knowledge. Please provide or tell me your skills to start the interview.",
       sender: 'ai',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       spoken: false,
