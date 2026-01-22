@@ -1,175 +1,102 @@
 const Interview = require('../models/Interview');
 const configureGemini = require('../config/gemini');
 
-// Initialize Gemini model
+// 1. Initialize the model (from your gemini.js file)
 let geminiModel;
 try {
     geminiModel = configureGemini();
 } catch (error) {
-    console.error('Failed to initialize Gemini:', error.message);
+    console.error('Gemini Model Init Failed:', error.message);
 }
 
-/**
- * Handle interview chat messages
- * @route POST /api/chat/message
- */
 const handleChat = async (req, res) => {
     try {
         const { message, sessionId, history = [] } = req.body;
         const userId = req.user._id;
-        
-        // Validate required fields
+
+        // Validation
         if (!message || !sessionId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Message and sessionId are required'
-            });
+            return res.status(400).json({ success: false, message: 'Message and sessionId required' });
         }
-        
-        // Validate message length
-        if (message.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Message cannot be empty'
-            });
+
+        // 2. If the model is not loaded, try initializing again
+        if (!geminiModel) {
+            geminiModel = configureGemini();
         }
-        
-        // Save user's message to database
-        const userMessage = await Interview.create({
-            userId,
-            role: 'user',
-            content: message,
-            sessionId
+
+        // 3. Save user's message
+        await Interview.create({
+            userId, role: 'user', content: message, sessionId
         });
-        
-        // Format chat history for Gemini
+
+        // 4. Format chat history
         const formattedHistory = history.map(msg => ({
             role: msg.role === 'user' ? 'user' : 'model',
             parts: [{ text: msg.content }]
         }));
+
+        // 5. System instruction logic (safest approach)
+        // We directly inject the role instruction with the first message
+        let finalMessage = message;
         
-        // Add current user message to history
-        formattedHistory.push({
-            role: 'user',
-            parts: [{ text: message }]
-        });
-        
-        // Start timing the AI response
-        const startTime = Date.now();
-        
-        // Generate AI response using Gemini
+        if (formattedHistory.length === 0) {
+            // If this is the very first message, instruct the model to role-play
+            finalMessage = `Act as a strict but friendly MERN Stack Technical Interviewer. 
+            Your goal is to test the candidate.
+            - Ask ONE conceptual question at a time.
+            - Keep answers short (max 100 words).
+            - Review the candidate's answer and then ask the next question.
+            
+            Candidate says: "${message}"`;
+        }
+
+        // 6. Start the chat
         const chat = geminiModel.startChat({
             history: formattedHistory,
+            // Configuration for gemini-2.0-flash
             generationConfig: {
-                temperature: 0.7,
-                topP: 0.9,
-                topK: 40,
                 maxOutputTokens: 500,
+                temperature: 0.7,
             }
         });
-        
-        const result = await chat.sendMessage(message);
+
+        // 7. Get response from the AI
+        const result = await chat.sendMessage(finalMessage);
         const aiResponse = result.response.text();
-        
-        // Calculate response time
-        const responseTime = Date.now() - startTime;
-        
-        // Save AI response to database
+
+        // 8. Save AI response
         const aiMessage = await Interview.create({
-            userId,
-            role: 'assistant',
-            content: aiResponse,
-            sessionId,
-            metadata: {
-                responseTime,
-                tokensUsed: result.response.usageMetadata?.totalTokenCount || 0
-            }
+            userId, role: 'assistant', content: aiResponse, sessionId,
+            metadata: { tokensUsed: 0 }
         });
-        
-        // Return the AI response
+
         return res.status(200).json({
             success: true,
             data: {
                 response: aiResponse,
                 sessionId,
-                messageId: aiMessage._id,
-                timestamp: aiMessage.timestamp,
-                metadata: {
-                    responseTime,
-                    tokensUsed: aiMessage.metadata?.tokensUsed
-                }
+                messageId: aiMessage._id
             }
         });
-        
+
     } catch (error) {
-        console.error('Chat error:', error.message);
-        
-        // Handle specific Gemini API errors
-        if (error.message.includes('API key')) {
-            return res.status(500).json({
-                success: false,
-                message: 'AI service configuration error'
-            });
-        }
-        
-        if (error.message.includes('safety')) {
-            return res.status(400).json({
-                success: false,
-                message: 'Message blocked by safety filters'
-            });
-        }
-        
+        console.error('Chat Error:', error.message);
         return res.status(500).json({
             success: false,
-            message: 'Error processing chat message',
+            message: 'Error processing chat',
             error: error.message
         });
     }
 };
 
-/**
- * Get chat history for a session
- * @route GET /api/chat/history/:sessionId
- */
+// History function will remain the same as before
 const getChatHistory = async (req, res) => {
     try {
         const { sessionId } = req.params;
-        const userId = req.user._id;
-        
-        // Validate session ID
-        if (!sessionId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Session ID is required'
-            });
-        }
-        
-        // Fetch chat history for this session
-        const history = await Interview.find({
-            userId,
-            sessionId
-        })
-        .sort({ timestamp: 1 }) // Sort by timestamp ascending
-        .select('role content timestamp metadata')
-        .lean();
-        
-        return res.status(200).json({
-            success: true,
-            data: {
-                sessionId,
-                messages: history,
-                count: history.length
-            }
-        });
-        
+        const history = await Interview.find({ userId: req.user._id, sessionId }).sort({ timestamp: 1 });
+        res.status(200).json({ success: true, data: { messages: history } });
     } catch (error) {
-        console.error('History fetch error:', error.message);
-        
-        return res.status(500).json({
-            success: false,
-            message: 'Error fetching chat history',
-            error: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
