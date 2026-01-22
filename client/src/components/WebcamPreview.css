@@ -1,0 +1,175 @@
+.webcam-container {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+
+.webcam-video {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+  transform: scaleX(-1); /* Mirror effect for self-view */
+  background: var(--bg-primary);
+}
+
+.webcam-placeholder {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+  color: var(--text-secondary);
+}
+
+.webcam-placeholder svg {
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.webcam-toggle-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--glass);
+  backdrop-filter: blur(8px);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid var(--border);
+  z-index: 10;
+}
+
+.webcam-toggle-btn:hover {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.1);
+  border-color: var(--accent);
+}
+
+.webcam-toggle-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+.webcam-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  font-size: 0.9rem;
+  padding: 1rem;
+  text-align: center;
+  border-radius: var(--border-radius);
+}
+
+.webcam-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+  padding: 12px;
+  color: white;
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.webcam-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.off {
+  background: #EF4444;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* For Interview Room Integration */
+.interview-room .webcam-container {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  z-index: 100;
+  max-width: 280px;
+}
+
+.interview-room .webcam-video,
+.interview-room .webcam-placeholder {
+  height: 160px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .interview-room .webcam-container {
+    position: relative;
+    top: auto;
+    right: auto;
+    max-width: 100%;
+    margin: 1rem auto;
+  }
+  
+  .interview-room .webcam-video,
+  .interview-room .webcam-placeholder {
+    height: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .webcam-container {
+    max-width: 100%;
+  }
+  
+  .webcam-video,
+  .webcam-placeholder {
+    height: 200px;
+  }
+  
+  .webcam-toggle-btn {
+    width: 36px;
+    height: 36px;
+  }
+}

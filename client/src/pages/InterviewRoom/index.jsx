@@ -4,11 +4,14 @@ import { FaRobot, FaUser, FaMicrophone, FaPaperPlane, FaStop, FaPlay, FaPause, F
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// আপনার পাথ অনুযায়ী ইমপোর্ট করুন
+
 import { chatAPI } from '../../api'; 
 import useSpeechToText from '../../hooks/useSpeechToText';
 import useTextToSpeech from '../../hooks/useTextToSpeech';
 import './InterviewRoom.css';
+
+//web cam-----------------------------
+import WebcamPreview from '../../components/WebcamPreview';
 
 const InterviewRoom = () => {
   const [messages, setMessages] = useState([]);
@@ -20,19 +23,19 @@ const InterviewRoom = () => {
   const { isListening, transcript, toggleListening } = useSpeechToText();
   const { isSpeaking, speak, stopSpeaking, pauseSpeaking, resumeSpeaking } = useTextToSpeech();
 
-  // ভয়েস ইনপুট হ্যান্ডলিং
+  // voice handeling 
   useEffect(() => {
     if (transcript) {
       setInputMessage(transcript);
     }
   }, [transcript]);
 
-  // সেশন আইডি সেভ রাখা
+  // store session id
   useEffect(() => {
     localStorage.setItem('sessionId', sessionId);
   }, [sessionId]);
 
-  // অটো স্ক্রল
+  // auto scrolll
   useEffect(() => {
     if (chatWindowRef.current) {
       chatWindowRef.current.scrollTo({
@@ -42,7 +45,7 @@ const InterviewRoom = () => {
     }
   }, [messages, isLoading]);
 
-  // AI এর কথা বলা (Text to Speech)
+  //  (Text to Speech)
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.sender === 'ai' && !lastMessage.spoken) {
@@ -53,7 +56,7 @@ const InterviewRoom = () => {
     }
   }, [messages, speak]);
 
-  // 🚀 মেইন ফাংশন: মেসেজ পাঠানো
+  // 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -61,7 +64,7 @@ const InterviewRoom = () => {
     setInputMessage('');
     setIsLoading(true);
 
-    // ১. ইউজারের মেসেজ UI তে দেখান
+    //
     const userMessage = {
       id: Date.now(),
       text: userText,
@@ -69,18 +72,15 @@ const InterviewRoom = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     
-    // বর্তমান মেসেজ স্টেটে যোগ করুন (UI এর জন্য)
+    // add present meassage in state
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
 
     try {
-      // ২. হিস্ট্রি তৈরি (Critical Fix 🛠️)
-      // Gemini নিয়ম: চ্যাট হিস্ট্রি অবশ্যই 'user' রোল দিয়ে শুরু হতে হবে।
-      // তাই প্রথম মেসেজটি যদি AI-এর Welcome message হয়, সেটা আমরা API-তে পাঠাব না।
       
       const historyPayload = messages
         .filter((msg, index) => {
-           // প্রথম মেসেজটি যদি AI-এর হয়, তবে বাদ দিন
+           
            if (index === 0 && msg.sender === 'ai') return false;
            return true;
         })
@@ -89,14 +89,14 @@ const InterviewRoom = () => {
           content: msg.text
         }));
 
-      // ৩. API কল
+      // api call
       const response = await chatAPI.sendMessage({
         message: userText,
         sessionId: sessionId,
         history: historyPayload
       });
 
-      // ৪. রেসপন্স হ্যান্ডেলিং
+      // handeling responce
       if (response.success) {
         const aiText = response.data.response;
 
@@ -111,7 +111,7 @@ const InterviewRoom = () => {
       }
     } catch (error) {
       console.error("Chat Error details:", error);
-      // টোস্ট অলরেডি api.js থেকে হ্যান্ডেল হচ্ছে, তাই এখানে চুপ থাকলেই হবে
+    
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +134,7 @@ const InterviewRoom = () => {
     };
     setMessages([welcomeMessage]);
     
-    // নতুন সেশন শুরু
+    // start new session
     const newSession = `session_${Date.now()}`;
     setSessionId(newSession);
   };
@@ -154,13 +154,17 @@ const InterviewRoom = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
+
       <ToastContainer theme="colored" />
       
       <div className="room-header">
         <h1>AI Technical Interview</h1>
         <p>Session: {sessionId.slice(-6)}</p>
       </div>
-
+     {/* web cam */}
+      <div style={{ width: '300px', flexShrink: 0 }}>
+          <WebcamPreview />
+        </div>
       <div className="chat-container">
         <div className="chat-window" ref={chatWindowRef}>
           <AnimatePresence>
